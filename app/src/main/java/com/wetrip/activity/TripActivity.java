@@ -1,4 +1,4 @@
-package com.wetrip;
+package com.wetrip.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,13 +10,16 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,6 +31,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.wetrip.service.LocationSyncService;
+import com.wetrip.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,12 +48,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
+public class TripActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    private static final LatLng LOWER_MANHATTAN = new LatLng(40.722543,
-            -73.998585);
-    private static final LatLng BROOKLYN_BRIDGE = new LatLng(40.7057, -73.9964);
-    private static final LatLng WALL_STREET = new LatLng(40.7064, -74.0094);
+    private static final LatLng START_POINT = new LatLng(12.971599,77.594563);
+    private static final LatLng END_POINT = new LatLng(12.295810, 76.639381);
 
     private GoogleMap mMap;
 
@@ -57,13 +60,25 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
 
     private HashMap<String,Marker> markerMap = new HashMap<>();
 
-    public static String NAME;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            ActionBar ab = getSupportActionBar();
+            ab.setTitle("Bangalore to Mysore");
+            ab.setSubtitle("152 Km");
+        }
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -77,8 +92,6 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
                         .setAction("Action", null).show();
             }
         });
-
-        NAME = getIntent().getExtras().getString("name");
 
         startService(new Intent(this,LocationSyncService.class));
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
@@ -131,22 +144,22 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
         options.position(WALL_STREET);*/
 
         mMarkerStart = mMap.addMarker(new MarkerOptions()
-                .position(LOWER_MANHATTAN)
+                .position(START_POINT)
                 .title("Start"));
         mMarkerStart.setTag(0);
 
 
         mMarkerEnd = mMap.addMarker(new MarkerOptions()
-                .position(WALL_STREET)
+                .position(END_POINT)
                 .title("End"));
         mMarkerEnd.setTag(0);
 
 
-        String url = getDirectionsUrl(LOWER_MANHATTAN,WALL_STREET);
+        String url = getDirectionsUrl(START_POINT,END_POINT);
         ReadTask downloadTask = new ReadTask();
         downloadTask.execute(url);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LOWER_MANHATTAN,
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(START_POINT,
                 14));
     }
 
@@ -387,4 +400,12 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
 
         return image;
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_trip, menu);
+        return true;
+    }
+
 }

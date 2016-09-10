@@ -11,9 +11,9 @@ import com.wetrip.R;
 /**
  * Created by anupamchugh on 10/12/15.
  */
-public class TableFragment extends Fragment {
+public class HelpFragment extends Fragment {
 
-    public TableFragment() {
+    public HelpFragment() {
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.wetrip;
+package com.wetrip.service;
 
 import android.app.Service;
 import android.content.Context;
@@ -16,6 +16,9 @@ import android.os.Message;
 import android.os.Process;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
+
+import com.wetrip.utils.PrefManager;
+import com.wetrip.utils.SharedPrefsUtils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -234,7 +237,7 @@ public class LocationSyncService extends Service {
             JSONObject jmain = new JSONObject();
             jmain.put("lat",loc.getLatitude());
             jmain.put("lng",loc.getLongitude());
-            jmain.put("id",ActiveMap.NAME);
+            jmain.put("id", SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"));
 
             MqttMessage message = new MqttMessage(jmain.toString().getBytes());
             if(mqttclient !=null && mqttclient.isConnected() ) {

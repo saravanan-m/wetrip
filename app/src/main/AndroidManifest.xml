@@ -15,25 +15,33 @@
     <application
         android:name=".app.WeTripApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/wetrip"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/WeTripTheme">
+        android:theme="@style/WeTripTheme"
+        android:screenOrientation="portrait"
+        >
 
 
         <activity
             android:name=".activity.SmsActivity"
-            android:label="@string/title_activity_sms">
+            android:label="@string/app_name"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".TestActivity"></activity>
-
         <activity
             android:name=".activity.MainActivity"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize">
+
+        </activity>
+
+        <activity
+            android:name=".activity.TripActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize">
 
@@ -53,12 +61,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyC9j8BQtKSxMsK9HZfH9fLrTy_1hyjeie4" />
 
-        <activity
-            android:name=".ActiveMap"
-            android:label="@string/title_activity_active_map" />
-
         <service
-            android:name=".LocationSyncService"
+            android:name=".service.LocationSyncService"
             android:enabled="true"
             android:exported="true"></service>
 

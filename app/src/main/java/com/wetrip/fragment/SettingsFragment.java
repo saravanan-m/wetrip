@@ -11,9 +11,9 @@ import com.wetrip.R;
 /**
  * Created by anupamchugh on 10/12/15.
  */
-public class FixturesFragment extends Fragment {
+public class SettingsFragment extends Fragment {
 
-    public FixturesFragment() {
+    public SettingsFragment() {
     }
 
     @Override

@@ -16,8 +16,8 @@ import android.widget.ListView;
 import com.wetrip.R;
 import com.wetrip.adapters.DrawerItemCustomAdapter;
 import com.wetrip.fragment.TripsFragment;
-import com.wetrip.fragment.FixturesFragment;
-import com.wetrip.fragment.TableFragment;
+import com.wetrip.fragment.SettingsFragment;
+import com.wetrip.fragment.HelpFragment;
 import com.wetrip.model.DataModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
         DataModel[] drawerItem = new DataModel[3];
 
-        drawerItem[0] = new DataModel(R.drawable.ic_action_upcoming, "Upcoming Trips");
+        drawerItem[0] = new DataModel(R.drawable.ic_action_upcoming, "My Trips");
         drawerItem[1] = new DataModel(R.drawable.ic_action_settings, "Settings");
         drawerItem[2] = new DataModel(R.drawable.ic_action_help, "Help");
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -82,10 +82,10 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new TripsFragment();
                 break;
             case 2:
-                fragment = new FixturesFragment();
+                fragment = new SettingsFragment();
                 break;
             case 3:
-                fragment = new TableFragment();
+                fragment = new HelpFragment();
                 break;
 
             default:

@@ -3,7 +3,8 @@ package com.wetrip.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
- 
+import android.preference.PreferenceManager;
+
 import java.util.HashMap;
  
 /**
@@ -37,7 +38,7 @@ public class PrefManager {
  
     public PrefManager(Context context) {
         this._context = context;
-        pref = _context.getSharedPreferences(PREF_NAME, PRIVATE_MODE);
+        pref = PreferenceManager.getDefaultSharedPreferences(context);
         editor = pref.edit();
     }
  

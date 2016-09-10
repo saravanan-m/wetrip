@@ -1,7 +1,7 @@
 package com.wetrip.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -9,9 +9,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.wetrip.R;
+import com.wetrip.activity.TripActivity;
 import com.wetrip.adapters.RecyclerItemClickListener;
 import com.wetrip.adapters.TripsAdapter;
 import com.wetrip.model.Trip;
@@ -41,7 +41,8 @@ public class TripsFragment extends Fragment {
         recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getContext(), recyclerView ,new RecyclerItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View view, int position) {
-                        Toast.makeText(getContext(),"Hello"+position,Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(getContext(),TripActivity.class);
+                        startActivity(intent);
                     }
 
                     @Override public void onLongItemClick(View view, int position) {
@@ -54,7 +55,7 @@ public class TripsFragment extends Fragment {
     }
 
     private void prepareMovieData() {
-        Trip trip = new Trip(1,"Bangalore to Coorg", "Active","244 Km");
+        Trip trip = new Trip(1,"Bangalore to Mysore", "Active","152 Km");
         tripList.add(trip);
         trip = new Trip(2,"Bangalore to Kodaikanal", "Planned","464 Km");
         tripList.add(trip);
