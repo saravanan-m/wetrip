@@ -55,7 +55,7 @@ public class TripsAdapter extends RecyclerView.Adapter<TripsAdapter.TripsViewHol
     @Override
     public void onBindViewHolder(TripsViewHolder holder, final int position) {
         holder.tripName.setText(trips.get(position).getName());
-        holder.distance.setText("0 Km");
+        holder.distance.setText(trips.get(position).distance);
         holder.members.setText("5 Members");
         holder.status.setText(trips.get(position).getStatus());
     }

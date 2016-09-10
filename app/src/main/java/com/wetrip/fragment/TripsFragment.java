@@ -54,11 +54,11 @@ public class TripsFragment extends Fragment {
     }
 
     private void prepareMovieData() {
-        Trip trip = new Trip(1,"Bangalore to Coorg", "Active");
+        Trip trip = new Trip(1,"Bangalore to Coorg", "Active","244 Km");
         tripList.add(trip);
-        trip = new Trip(2,"Bangalore to Kodaikanal", "Planned");
+        trip = new Trip(2,"Bangalore to Kodaikanal", "Planned","464 Km");
         tripList.add(trip);
-        trip = new Trip(3,"Bangalore to Nandi Hills", "Planned");
+        trip = new Trip(3,"Bangalore to Nandi Hills", "Planned","62 Km");
         tripList.add(trip);
 
 //

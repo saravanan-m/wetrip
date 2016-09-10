@@ -16,6 +16,9 @@ public class Trip {
     @SerializedName("from")
     public String from = "";
 
+    @SerializedName("distance")
+    public String distance = "";
+
     @SerializedName("start_date")
     public String start_date = "";
 
@@ -28,10 +31,11 @@ public class Trip {
     @SerializedName("createdAt")
     public String createdAt = "";
 
-    public Trip( int id, String name,String status) {
+    public Trip( int id, String name,String status,String distance) {
         this.status = status;
         this.id = id;
         this.name = name;
+        this.distance = distance;
     }
 
     public String getStatus() {
