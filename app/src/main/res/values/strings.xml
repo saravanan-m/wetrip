@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Wetrip</string>
+    <string name="title_activity_active_map">ActiveMap</string>
 </resources>
