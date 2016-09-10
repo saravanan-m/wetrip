@@ -1,4 +1,5 @@
 <resources>
+<<<<<<< HEAD
     <string name="app_name">WeTrip</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -18,4 +19,8 @@
         <item>Settings</item>
         <item>Help</item>
     </string-array>
+=======
+    <string name="app_name">Wetrip</string>
+    <string name="title_activity_active_map">ActiveMap</string>
+>>>>>>> 97eb9d868eb60075d4a90f2283c8b32e46faea5c
 </resources>

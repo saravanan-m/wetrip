@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:name=".app.WeTripApplication"
         android:allowBackup="true"
@@ -42,6 +43,16 @@
         <service
             android:name=".service.HttpService"
             android:exported="false" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC9j8BQtKSxMsK9HZfH9fLrTy_1hyjeie4" />
+
+        <activity
+            android:name=".ActiveMap"
+            android:label="@string/title_activity_active_map"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
     </application>
 
 </manifest>
