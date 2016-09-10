@@ -5,7 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+<<<<<<< HEAD
     tools:context="com.wetrip.activity.TripActivity">
+=======
+    tools:context=".activity.ActiveMap">
+>>>>>>> d60952a417d6652c5612e0f3f8ec00896cecfe14
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

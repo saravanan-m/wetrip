@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -28,13 +27,10 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
 
 public class LocationSyncService extends Service {
 
@@ -238,7 +234,6 @@ public class LocationSyncService extends Service {
             jmain.put("lat",loc.getLatitude());
             jmain.put("lng",loc.getLongitude());
             jmain.put("id", SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"));
-
             MqttMessage message = new MqttMessage(jmain.toString().getBytes());
             if(mqttclient !=null && mqttclient.isConnected() ) {
                 mqttclient.publish(subscriptionTopic, message);

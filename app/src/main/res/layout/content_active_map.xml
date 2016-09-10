@@ -5,7 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
+<<<<<<< HEAD
     tools:context="com.wetrip.activity.TripActivity"
+=======
+    tools:context=".activity.ActiveMap"
+>>>>>>> d60952a417d6652c5612e0f3f8ec00896cecfe14
     tools:showIn="@layout/activity_active_map">
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
