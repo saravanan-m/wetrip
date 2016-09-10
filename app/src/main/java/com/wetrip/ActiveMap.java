@@ -1,10 +1,19 @@
 package com.wetrip;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -14,7 +23,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -40,6 +51,13 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
     private static final LatLng WALL_STREET = new LatLng(40.7064, -74.0094);
 
     private GoogleMap mMap;
+
+    private Marker mMarkerStart;
+    private Marker mMarkerEnd;
+
+    private HashMap<String,Marker> markerMap = new HashMap<>();
+
+    public static String NAME;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,8 +77,45 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
                         .setAction("Action", null).show();
             }
         });
+
+        NAME = getIntent().getExtras().getString("name");
+
+        startService(new Intent(this,LocationSyncService.class));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("lat-lng-event"));
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        stopService(new Intent(this,LocationSyncService.class));
+    }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            double lat = intent.getDoubleExtra("lat",-1);
+            double lng = intent.getDoubleExtra("lng",-1);
+            String id = intent.getStringExtra("id");
+
+            if(id!=null && mMap!=null){
+                Marker marker = markerMap.get(id);
+                LatLng loc = new LatLng(lat,
+                        lng);
+              if(marker == null){
+                  MarkerOptions options = new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromBitmap(textAsBitmap(id,36,Color.GREEN)));
+                  marker = mMap.addMarker(options);
+                  markerMap.put(id,marker);
+              }else{
+                  marker.setPosition(loc);
+              }
+            }
+
+        }
+    };
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -70,18 +125,29 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
 
-        MarkerOptions options = new MarkerOptions();
+       /* MarkerOptions options = new MarkerOptions();
         options.position(LOWER_MANHATTAN);
         //options.position(BROOKLYN_BRIDGE);
-        options.position(WALL_STREET);
-        mMap.addMarker(options);
+        options.position(WALL_STREET);*/
+
+        mMarkerStart = mMap.addMarker(new MarkerOptions()
+                .position(LOWER_MANHATTAN)
+                .title("Start"));
+        mMarkerStart.setTag(0);
+
+
+        mMarkerEnd = mMap.addMarker(new MarkerOptions()
+                .position(WALL_STREET)
+                .title("End"));
+        mMarkerEnd.setTag(0);
+
+
         String url = getDirectionsUrl(LOWER_MANHATTAN,WALL_STREET);
         ReadTask downloadTask = new ReadTask();
         downloadTask.execute(url);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(BROOKLYN_BRIDGE,
-                13));
-        addMarkers();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LOWER_MANHATTAN,
+                14));
     }
 
 
@@ -120,19 +186,10 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
         // Building the url to the web service
         String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
 
+        Log.i("map url",url);
         return url;
     }
 
-    private void addMarkers() {
-        if (mMap != null) {
-            mMap.addMarker(new MarkerOptions().position(BROOKLYN_BRIDGE)
-                    .title("First Point"));
-            mMap.addMarker(new MarkerOptions().position(LOWER_MANHATTAN)
-                    .title("Second Point"));
-            mMap.addMarker(new MarkerOptions().position(WALL_STREET)
-                    .title("Third Point"));
-        }
-    }
 
     private class ReadTask extends AsyncTask<String, Void, String> {
         @Override
@@ -194,7 +251,7 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
                 }
 
                 polyLineOptions.addAll(points);
-                polyLineOptions.width(2);
+                polyLineOptions.width(5);
                 polyLineOptions.color(Color.BLUE);
             }
 
@@ -304,5 +361,30 @@ public class ActiveMap extends AppCompatActivity implements OnMapReadyCallback {
         } catch (Exception e) {
         }
         return routes;
+    }
+
+    public Bitmap textAsBitmap(String text, float textSize, int textColor) {
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextSize(textSize);
+        paint.setColor(textColor);
+        paint.setTextAlign(Paint.Align.LEFT);
+        float baseline = -paint.ascent(); // ascent() is negative
+       // int width = (int) (paint.measureText(text) + 0.5f); // round
+       // int height = (int) (baseline + paint.descent() + 0.5f);
+
+        Rect bounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), bounds);
+
+        Bitmap image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(image);
+
+        Paint circlePaint = new Paint();
+        circlePaint.setColor(Color.RED);
+        circlePaint.setAntiAlias(true);
+
+        canvas.drawCircle(bounds.width()/2, bounds.height()/2, bounds.width()/2, circlePaint);
+        canvas.drawText(text, 0, baseline, paint);
+
+        return image;
     }
 }
