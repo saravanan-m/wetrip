@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".TestActivity"></activity>
+        <activity android:name=".activity.TestActivity"></activity>
 
         <activity
             android:name=".activity.MainActivity"
@@ -54,11 +54,11 @@
             android:value="AIzaSyC9j8BQtKSxMsK9HZfH9fLrTy_1hyjeie4" />
 
         <activity
-            android:name=".ActiveMap"
+            android:name=".activity.ActiveMap"
             android:label="@string/title_activity_active_map" />
 
         <service
-            android:name=".LocationSyncService"
+            android:name=".service.LocationSyncService"
             android:enabled="true"
             android:exported="true"></service>
 

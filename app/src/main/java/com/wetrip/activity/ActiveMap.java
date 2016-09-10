@@ -1,4 +1,4 @@
-package com.wetrip;
+package com.wetrip.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,6 +28,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.wetrip.R;
+import com.wetrip.service.LocationSyncService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
