@@ -28,6 +28,12 @@ public class Trip {
     @SerializedName("createdAt")
     public String createdAt = "";
 
+    public Trip( int id, String name,String status) {
+        this.status = status;
+        this.id = id;
+        this.name = name;
+    }
+
     public String getStatus() {
         return status;
     }

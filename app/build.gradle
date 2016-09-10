@@ -30,5 +30,14 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.2.0'
     compile 'com.android.support:design:23.4.0'
     compile 'com.google.android.gms:play-services-maps:+'
+    compile ('com.google.maps.android:android-maps-utils:0.4+'){
+        exclude module: 'support-v4'
+    }
+    compile ('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'){
+        exclude module: 'support-v4'
+    }
+    compile ('org.eclipse.paho:org.eclipse.paho.android.service:1.0.2'){
+        exclude module: 'support-v4'
+    }
 
 }

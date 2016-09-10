@@ -1,9 +1,6 @@
 <resources>
-
         <style name="WeTripTheme" parent="WeTripTheme.Base">
         </style>
-
-<<<<<<< HEAD
         <style name="WeTripTheme.Base" parent="Theme.AppCompat.Light.DarkActionBar">
             <item name="windowNoTitle">true</item>
             <item name="windowActionBar">false</item>
@@ -11,16 +8,5 @@
             <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
             <item name="colorAccent">@color/colorAccent</item>
         </style>
-=======
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
->>>>>>> 97eb9d868eb60075d4a90f2283c8b32e46faea5c
 </resources>
 

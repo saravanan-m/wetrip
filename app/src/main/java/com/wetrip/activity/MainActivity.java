@@ -15,7 +15,7 @@ import android.widget.ListView;
 
 import com.wetrip.R;
 import com.wetrip.adapters.DrawerItemCustomAdapter;
-import com.wetrip.fragment.ConnectFragment;
+import com.wetrip.fragment.TripsFragment;
 import com.wetrip.fragment.FixturesFragment;
 import com.wetrip.fragment.TableFragment;
 import com.wetrip.model.DataModel;
@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         setupDrawerToggle();
+        selectItem(1);
 
     }
 
@@ -78,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
         switch (position) {
             case 1:
-                fragment = new ConnectFragment();
+                fragment = new TripsFragment();
                 break;
             case 2:
                 fragment = new FixturesFragment();

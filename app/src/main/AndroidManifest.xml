@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.wetrip">
+
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name=".app.WeTripApplication"
@@ -50,8 +51,14 @@
 
         <activity
             android:name=".ActiveMap"
-            android:label="@string/title_activity_active_map"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:label="@string/title_activity_active_map" />
+
+        <service
+            android:name=".LocationSyncService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <service android:name="org.eclipse.paho.android.service.MqttService"/>
 
     </application>
 

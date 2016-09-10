@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:textSize="45dp"
-        android:text="Fixtures"
+        android:text="Settings"
         android:textStyle="bold"/>
 
     <TextView
@@ -24,7 +24,7 @@
         android:textSize="12dp"
         android:layout_marginTop="10dp"
         android:gravity="center_horizontal"
-        android:text="Edit fragment_fixtures.xml to change the appearance"
+        android:text="Setting will come here."
         android:id="@+id/textView2" />
 
 

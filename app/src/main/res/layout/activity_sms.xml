@@ -47,6 +47,7 @@
                     android:id="@+id/inputName"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/white"
                     android:layout_marginBottom="15dp"
                     android:fontFamily="sans-serif-light"
                     android:hint="@string/lbl_name"
