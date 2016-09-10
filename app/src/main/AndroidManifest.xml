@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
 
-<<<<<<< HEAD
+
 
         <activity
             android:name=".activity.MainActivity"
@@ -69,9 +69,7 @@
             android:enabled="true"
             android:exported="true"></service>
 
-        <service android:name="o
-
-.eclipse.paho.android.service.MqttService"/>
+        <service android:name="org.eclipse.paho.android.service.MqttService"/>
 
     </application>
 
