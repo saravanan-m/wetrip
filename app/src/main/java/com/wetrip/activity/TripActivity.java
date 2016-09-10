@@ -160,7 +160,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         downloadTask.execute(url);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(START_POINT,
-                14));
+                9));
     }
 
 
@@ -407,5 +407,5 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         getMenuInflater().inflate(R.menu.menu_trip, menu);
         return true;
     }
-
+    
 }
