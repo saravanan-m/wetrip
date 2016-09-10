@@ -23,11 +23,15 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 
 public class LocationSyncService extends Service {
 
@@ -44,9 +48,10 @@ public class LocationSyncService extends Service {
     final String publishTopic = "wetrip-first";
     final String publishMessage = "hii hii";
 
-    MqttAndroidClient mqttAndroidClient;
+    MqttAndroidClient mqttclient;
 
     boolean isSubscribed = false;
+    boolean isConnected = false;
     private final class ServiceHandler extends Handler {
         public ServiceHandler(Looper looper) {
             super(looper);
@@ -115,7 +120,16 @@ public class LocationSyncService extends Service {
         super.onDestroy();
         try {
             locationManager.removeUpdates(locationListener);
+
+            if(mqttclient!=null){
+                mqttclient.unsubscribe(subscriptionTopic);
+                if(mqttclient.isConnected()) {
+                    mqttclient.disconnect();
+                }
+            }
         }catch (SecurityException e){
+            e.printStackTrace();
+        } catch (MqttException e) {
             e.printStackTrace();
         }
 
@@ -132,139 +146,101 @@ public class LocationSyncService extends Service {
     }
 
     public void setupmqtt(){
-
-        addToHistory("Setting up mqtt");
-
-        mqttAndroidClient = new MqttAndroidClient(getApplicationContext(), serverUri, clientId);
-        mqttAndroidClient.
-
-        mqttAndroidClient.setCallback(new MqttCallbackExtended() {
-            @Override
-            public void connectComplete(boolean reconnect, String serverURI) {
-
-                if (reconnect) {
-                    addToHistory("Reconnected to : " + serverURI);
-                    // Because Clean Session is true, we need to re-subscribe
-                    subscribeToTopic();
-                } else {
-                    addToHistory("Connected to: " + serverURI);
-                }
-            }
-
-            @Override
-            public void connectionLost(Throwable cause) {
-                cause.printStackTrace();
-                addToHistory("The Connection was lost.");
-            }
-
-            @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-              //  addToHistory("Incoming message: " + new String(message.getPayload()));
-
-                JSONObject jsonObject = new JSONObject(new String(message.getPayload()));
-
-                Intent intent = new Intent("lat-lng-event");
-                // You can also include some extra data.
-                intent.putExtra("lat",jsonObject.getDouble("lat"));
-                intent.putExtra("lng",jsonObject.getDouble("lng"));
-                intent.putExtra("id",jsonObject.getString("id"));
-
-                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-            }
-
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-
-            }
-        });
-
-        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setAutomaticReconnect(true);
-        mqttConnectOptions.setCleanSession(false);
-
-
-
-
+        String clientId = MqttClient.generateClientId();
+        mqttclient =
+                new MqttAndroidClient(this.getApplicationContext(), serverUri,
+                        clientId);
 
         try {
-            //addToHistory("Connecting to " + serverUri);
-            mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
+            IMqttToken token = mqttclient.connect();
+            mqttclient.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+
+                    JSONObject jsonObject = new JSONObject(new String(message.getPayload()));
+
+                    Intent intent = new Intent("lat-lng-event");
+                    // You can also include some extra data.
+                    intent.putExtra("lat",jsonObject.getDouble("lat"));
+                    intent.putExtra("lng",jsonObject.getDouble("lng"));
+                    intent.putExtra("id",jsonObject.getString("id"));
+
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+
+                }
+            });
+            token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    DisconnectedBufferOptions disconnectedBufferOptions = new DisconnectedBufferOptions();
-                    disconnectedBufferOptions.setBufferEnabled(true);
-                    disconnectedBufferOptions.setBufferSize(100);
-                    disconnectedBufferOptions.setPersistBuffer(false);
-                    disconnectedBufferOptions.setDeleteOldestMessages(false);
-                    //mqttAndroidClient.setBufferOpts(disconnectedBufferOptions);
-                    subscribeToTopic();
+                    // We are connected
+                    isConnected = true;
+                    subscribe();
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    addToHistory("Failed to connect to: " + serverUri);
-                    exception.printStackTrace();
-                }
-            });
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    isConnected = false;
+                }}
+            );
 
-
-        } catch (MqttException ex){
-            ex.printStackTrace();
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
+
+
     }
 
 
-
-    public void subscribeToTopic(){
+    public void subscribe(){
+        int qos = 1;
         try {
-            mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
+            IMqttToken subToken = mqttclient.subscribe(subscriptionTopic, qos);
+            subToken.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    addToHistory("Subscribed!");
-
+                    // The message was published
                     isSubscribed = true;
                 }
 
                 @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                public void onFailure(IMqttToken asyncActionToken,
+                                      Throwable exception) {
+                    // The subscription could not be performed, maybe the user was not
+                    // authorized to subscribe on the specified topic e.g. using wildcards
+
                     isSubscribed = false;
-                    addToHistory("Failed to subscribe");
+
                 }
             });
-
-           /* // THIS DOES NOT WORK!
-            mqttAndroidClient.subscribe(subscriptionTopic, 0, new IMqttMessageListener() {
-                @Override
-                public void messageArrived(String topic, MqttMessage message) throws Exception {
-                    // message Arrived!
-                    System.out.println("Message: " + topic + " : " + new String(message.getPayload()));
-                }
-            });*/
-
-        } catch (MqttException ex){
-            System.err.println("Exception whilst subscribing");
-            ex.printStackTrace();
+        } catch (MqttException e) {
+            e.printStackTrace();
         }
     }
 
     public void publishMessage(Location loc){
-
         try {
-            MqttMessage message = new MqttMessage();
 
             JSONObject jmain = new JSONObject();
             jmain.put("lat",loc.getLatitude());
             jmain.put("lng",loc.getLongitude());
             jmain.put("id",ActiveMap.NAME);
 
-            message.setPayload(jmain.toString().getBytes());
-           // addToHistory("Message Published");
-            if(mqttAndroidClient!=null &&mqttAndroidClient.isConnected()){
-                mqttAndroidClient.publish(publishTopic, message);
-               // addToHistory(mqttAndroidClient.getBufferedMessageCount() + " messages in buffer.");
+            MqttMessage message = new MqttMessage(jmain.toString().getBytes());
+            if(mqttclient !=null && mqttclient.isConnected() ) {
+                mqttclient.publish(subscriptionTopic, message);
             }
         } catch (MqttException e) {
-            System.err.println("Error Publishing: " + e.getMessage());
             e.printStackTrace();
         } catch (JSONException e) {
             e.printStackTrace();
