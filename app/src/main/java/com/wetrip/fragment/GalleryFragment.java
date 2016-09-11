@@ -17,16 +17,25 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.error.AuthFailureError;
+import com.android.volley.error.VolleyError;
+import com.android.volley.request.StringRequest;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.wetrip.R;
+import com.wetrip.app.WeTripApplication;
+import com.wetrip.config.Config;
 import com.wetrip.utils.HttpFetcher;
 import com.wetrip.utils.PlacesDisplayOnMap;
+import com.wetrip.utils.SharedPrefsUtils;
 
 import junit.framework.Assert;
 
@@ -35,7 +44,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class GalleryFragment extends Fragment {
@@ -69,6 +79,8 @@ public class GalleryFragment extends Fragment {
 
             }
         });
+
+        getTripPhoto();
         return view;
     }
 
@@ -150,34 +162,56 @@ public class GalleryFragment extends Fragment {
             container.removeView((LinearLayout) object);
         }
 
-       public  class TripImagesTask extends AsyncTask<Object, Integer, String> {
+    }
 
-            String googlePlacesData;
-            @Override
-            protected String doInBackground(Object... inputObj) {
-                try {
-                    String trip = "http://ec2-54-172-101-14.compute-1.amazonaws.com/api/trip/gettrip?trip=1";
-                    HttpFetcher http = new HttpFetcher();
-                    String googlePlacesData = http.read(trip);
-                } catch (Exception e) {
-                    Log.d("Google Place Read Task", e.toString());
-                }
-                return googlePlacesData;
-            }
+    private void getTripPhoto() {
+
+        StringRequest strReq = new StringRequest(Request.Method.GET,
+                Config.URL_TRIP_PHOTO, new Response.Listener<String>() {
 
             @Override
-            protected void onPostExecute(String result) {
+            public void onResponse(String response) {
+                Log.d(TAG, response.toString());
+
                 try {
-                    JSONObject jsonObject = new JSONObject(result);
-                    JSONObject trip = jsonObject.getJSONObject("trip");
-                    JSONArray  jsonArray = trip.getJSONArray("files");
-                    Log.d("Files",jsonArray.length()+"");
+                    JSONObject responseObj = new JSONObject(response);
+                    JSONArray files = responseObj.getJSONObject("trip").getJSONArray("files");
+                    for (int i=0; i<files.length(); i++) {
+                        JSONObject item = files.getJSONObject(i);
+                        String url = item.getString("url");
+                        _images.add(url);
+                    }
+                    _adapter.notifyDataSetChanged();
+
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Toast.makeText(getActivity().getApplicationContext(),
+                            "Error: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+
                 }
 
             }
-        }
+        }, new Response.ErrorListener() {
 
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Error: " + error.getMessage());
+                Toast.makeText(getActivity().getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("X-AUTH-TOKEN",SharedPrefsUtils.getStringPreference(getActivity().getApplicationContext(),"token"));
+                return params;
+            }
+
+
+
+        };
+        // Adding request to request queue
+        WeTripApplication.getInstance().addToRequestQueue(strReq);
     }
 }

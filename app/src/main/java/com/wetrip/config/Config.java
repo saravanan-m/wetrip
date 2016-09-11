@@ -6,6 +6,7 @@ public class Config {
     public static final String URL_REQUEST_SMS = SERVER_URL+"sendotp";
     public static final String URL_VERIFY_OTP = SERVER_URL+"login";
     public static final String URL_UPLOAD_FILE = SERVER_URL+"trip/uploadfile";
+    public static final String URL_TRIP_PHOTO = SERVER_URL+"trip/gettrip?trip=1";
 
     public static final String OTP_DELIMITER = "-";
 }
