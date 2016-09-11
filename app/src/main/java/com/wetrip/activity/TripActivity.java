@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
@@ -22,8 +23,10 @@ import android.provider.Settings;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,6 +42,8 @@ import com.android.volley.error.AuthFailureError;
 import com.android.volley.error.NoConnectionError;
 import com.android.volley.error.TimeoutError;
 import com.android.volley.error.VolleyError;
+
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -135,7 +140,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                         break;
                 }
-                return false;
+                return true;
             }
         });
         setSupportActionBar(toolbar);
@@ -162,6 +167,38 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(new Intent(getApplicationContext(), PitStopActivity.class));
             }
         });
+
+        btnPoke.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(TripActivity.this);
+                builder.setTitle("Message");
+                final EditText input = new EditText(TripActivity.this);
+                builder.setView(input);
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        String m_Text = input.getText().toString();
+
+                        Intent intent = new Intent("poke-msg");
+                        intent.putExtra("msg", m_Text);
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
+
+            }
+        });
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -175,23 +212,17 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         IntentFilter filter = new IntentFilter();
         filter.addAction("lat-lng-event");
         filter.addAction("capture-image");
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
-                filter);
-
-//        findViewById(R.id.action_name).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
-
-        showChatHead(getApplicationContext(),true);
-        showGallery();
-
         filter.addAction("alert-bar");
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 filter);
+
+
+        showChatHead(getApplicationContext(),true);
+        showGallery();
+
+
+
     }
 
 
@@ -274,6 +305,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                 flipper.setInAnimation(TripActivity.this, R.anim.in_from_left);
                 flipper.setOutAnimation(TripActivity.this, R.anim.out_to_right);
 
+                flipper.setDisplayedChild(flipper.getChildCount()-1);
                 flipper.startFlipping();
             }
             String msg = intent.getStringExtra("message");

@@ -1,8 +1,10 @@
 package com.wetrip.service;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -109,6 +111,11 @@ public class LocationSyncService extends Service {
         mServiceHandler = new ServiceHandler(mServiceLooper);
 
         setupmqtt();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("poke-msg");
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                filter);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -129,7 +136,7 @@ public class LocationSyncService extends Service {
         super.onDestroy();
         try {
             locationManager.removeUpdates(locationListener);
-
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
             if(mqttclient!=null){
                 mqttclient.unsubscribe(subscriptionTopic);
                 if(mqttclient.isConnected()) {
@@ -198,7 +205,15 @@ public class LocationSyncService extends Service {
                                 }
                             }
                         }
-                    }else {
+                    }else if(jsonObject.has("poke_msg")){
+
+                        Intent intent = new Intent("alert-bar");
+                        intent.putExtra("id", "@"+jsonObject.getString("name"));
+                        intent.putExtra("dist",jsonObject.getString("poke_msg"));
+
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+                    } else{
                         Intent intent = new Intent("lat-lng-event");
                         // You can also include some extra data.
                         intent.putExtra("lat", jsonObject.getDouble("lat"));
@@ -305,6 +320,23 @@ public class LocationSyncService extends Service {
         }
     }
 
+    public void publishMessage(String msg){
+        try {
+            JSONObject jmain = new JSONObject();
+            jmain.put("poke_msg",msg.toString());
+            jmain.put("name",SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"));
+
+            MqttMessage message = new MqttMessage(jmain.toString().getBytes());
+            if(mqttclient !=null && mqttclient.isConnected() ) {
+                mqttclient.publish(subscriptionTopic, message);
+            }
+        } catch (MqttException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void addToHistory(String msg){
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
@@ -369,4 +401,12 @@ public class LocationSyncService extends Service {
 
         return dist;
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String msg = intent.getStringExtra("msg");
+            publishMessage(msg);
+        }
+    };
 }
