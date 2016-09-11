@@ -17,6 +17,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/image_fragment"
         android:layout_marginTop="72dp">
         <ViewFlipper
             android:id="@+id/flipper"
@@ -31,8 +32,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </RelativeLayout>
-
-
+    <FrameLayout
+        android:id="@+id/image_fragment"
+        android:layout_above="@+id/actions"
+        android:layout_width="match_parent"
+        android:layout_height="70dp" />
     <LinearLayout
         android:id="@+id/actions"
         android:layout_alignParentBottom="true"
