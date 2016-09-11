@@ -9,6 +9,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -173,6 +176,13 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             }else if(intent.getAction().equals("alert-bar")){
+                try {
+                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+                    r.play();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 flipper.stopFlipping();
                 String dst = intent.getStringExtra("dist");
                 String id = intent.getStringExtra("id");
