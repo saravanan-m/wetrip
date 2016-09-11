@@ -23,7 +23,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
@@ -35,6 +37,10 @@ import com.android.volley.error.AuthFailureError;
 import com.android.volley.error.NoConnectionError;
 import com.android.volley.error.TimeoutError;
 import com.android.volley.error.VolleyError;
+import android.widget.TextView;
+import android.widget.ViewFlipper;
+
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -87,12 +93,49 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Button btnPitStop;
     private Button btnPoke;
 
+    private ViewFlipper flipper;
+    float initialX;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        flipper = (ViewFlipper)findViewById(R.id.flipper);
+        flipper.setAutoStart(true);
+        flipper.setFlipInterval(30000);
+        flipper.startFlipping();
+
+        flipper.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = event.getX();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        float finalX = event.getX();
+                        if (initialX > finalX) {
+                            if (flipper.getDisplayedChild() == 1)
+                                break;
+
+                            flipper.setInAnimation(TripActivity.this, R.anim.in_from_left);
+                            flipper.setOutAnimation(TripActivity.this, R.anim.out_to_right);
+
+                            flipper.showNext();
+                        } else {
+                            if (flipper.getDisplayedChild() == 0)
+                                break;
+
+                            flipper.setInAnimation(TripActivity.this, R.anim.in_from_right);
+                            flipper.setOutAnimation(TripActivity.this, R.anim.out_to_left);
+                            flipper.showPrevious();
+                        }
+                        break;
+                }
+                return false;
+            }
+        });
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -143,6 +186,10 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         showChatHead(getApplicationContext(),true);
         showGallery();
 
+        filter.addAction("alert-bar");
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                filter);
     }
 
 
@@ -178,21 +225,47 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            double lat = intent.getDoubleExtra("lat",-1);
-            double lng = intent.getDoubleExtra("lng",-1);
-            String id = intent.getStringExtra("id");
+            if(intent.getAction().equals("lat-lng-event")) {
+                double lat = intent.getDoubleExtra("lat", -1);
+                double lng = intent.getDoubleExtra("lng", -1);
+                String id = intent.getStringExtra("id");
 
-            if(id!=null && mMap!=null){
-                Marker marker = markerMap.get(id);
-                LatLng loc = new LatLng(lat,
-                        lng);
-              if(marker == null){
-                  MarkerOptions options = new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromBitmap(textAsBitmap(id,36,Color.GREEN)));
-                  marker = mMap.addMarker(options);
-                  markerMap.put(id,marker);
-              }else{
-                  marker.setPosition(loc);
-              }
+                if (id != null && mMap != null) {
+                    Marker marker = markerMap.get(id);
+                    LatLng loc = new LatLng(lat,
+                            lng);
+                    if (marker == null) {
+                        MarkerOptions options = new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromBitmap(textAsBitmap(id, 36, Color.GREEN)));
+                        marker = mMap.addMarker(options);
+                        markerMap.put(id, marker);
+                    } else {
+                        marker.setPosition(loc);
+                    }
+                }
+            }else if(intent.getAction().equals("alert-bar")){
+                flipper.stopFlipping();
+                String dst = intent.getStringExtra("dist");
+                String id = intent.getStringExtra("id");
+
+                LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View view = mInflater.inflate(R.layout.item_card, flipper, false);
+
+                TextView heading = (TextView)view.findViewById(R.id.heading);
+                TextView sub = (TextView)view.findViewById(R.id.sub_title);
+
+                heading.setText(id);
+                sub.setText(dst);
+
+                if(flipper.getChildCount() > 10){
+                    flipper.removeViewAt(0);
+                }
+
+                flipper.addView(view);
+
+                flipper.setInAnimation(TripActivity.this, R.anim.in_from_left);
+                flipper.setOutAnimation(TripActivity.this, R.anim.out_to_right);
+
+                flipper.startFlipping();
             }
             String msg = intent.getStringExtra("message");
             if(msg != null && msg.equals("capture_image"))
@@ -236,7 +309,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         downloadTask.execute(url);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(START_POINT,
-                14));
+                9));
     }
 
 
@@ -464,7 +537,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         Rect bounds = new Rect();
         paint.getTextBounds(text, 0, text.length(), bounds);
 
-        Bitmap image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888);
+        Bitmap image = Bitmap.createBitmap(bounds.width(), 48, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(image);
 
         Paint circlePaint = new Paint();

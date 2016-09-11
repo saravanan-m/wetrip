@@ -13,9 +13,12 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
+import com.wetrip.activity.AlertActivity;
 import com.wetrip.utils.PrefManager;
 import com.wetrip.utils.SharedPrefsUtils;
 
@@ -31,6 +34,10 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class LocationSyncService extends Service {
 
@@ -51,6 +58,9 @@ public class LocationSyncService extends Service {
 
     boolean isSubscribed = false;
     boolean isConnected = false;
+    ArrayList<LocPlace> locArray = new ArrayList<>();
+
+    long timeStamp = 0;
     private final class ServiceHandler extends Handler {
         public ServiceHandler(Looper looper) {
             super(looper);
@@ -163,14 +173,47 @@ public class LocationSyncService extends Service {
 
                     JSONObject jsonObject = new JSONObject(new String(message.getPayload()));
 
-                    Intent intent = new Intent("lat-lng-event");
-                    // You can also include some extra data.
-                    intent.putExtra("lat",jsonObject.getDouble("lat"));
-                    intent.putExtra("lng",jsonObject.getDouble("lng"));
-                    intent.putExtra("id",jsonObject.getString("id"));
+                    if(jsonObject.has("alert_out")){
+                        String ids = jsonObject.getString("alert_out");
+                        if (ids.contains(SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"))){
 
-                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                            if((System.currentTimeMillis() - timeStamp) > 1*60*1000){
+                                timeStamp = System.currentTimeMillis();
 
+                                if(locArray.size()>1) {
+                                    float meeter = distFrom(locArray.get(0).loc.getLatitude(), locArray.get(0).loc.getLongitude(), locArray.get(1).loc.getLatitude(), locArray.get(1).loc.getLongitude());
+
+                                    String name = locArray.get(0).id;
+                                    if(name.equals(SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"))){
+                                        name = locArray.get(1).id;
+                                    }
+
+                                    String full = ""+(meeter/1000f);
+                                    String dist = full.substring(0,full.length()>5?5:full.length()) +"KM away" ;
+                                    Intent intent = new Intent("alert-bar");
+                                    intent.putExtra("id", name);
+                                    intent.putExtra("dist",dist);
+
+                                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                                }
+                            }
+                        }
+                    }else {
+                        Intent intent = new Intent("lat-lng-event");
+                        // You can also include some extra data.
+                        intent.putExtra("lat", jsonObject.getDouble("lat"));
+                        intent.putExtra("lng", jsonObject.getDouble("lng"));
+                        intent.putExtra("id", jsonObject.getString("id"));
+
+                        Location location = new Location("");
+                        location.setLatitude(jsonObject.getDouble("lat"));
+                        location.setLongitude(jsonObject.getDouble("lng"));
+
+                        addCopy(location, jsonObject.getString("id"));
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+                        sendNotification();
+                    }
                 }
 
                 @Override
@@ -245,7 +288,85 @@ public class LocationSyncService extends Service {
         }
     }
 
+
+    public void publishMessage(ArrayList<String> msg){
+        try {
+            JSONObject jmain = new JSONObject();
+            jmain.put("alert_out",msg.toString());
+
+            MqttMessage message = new MqttMessage(jmain.toString().getBytes());
+            if(mqttclient !=null && mqttclient.isConnected() ) {
+                mqttclient.publish(subscriptionTopic, message);
+            }
+        } catch (MqttException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void addToHistory(String msg){
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    public static class LocPlace{
+        public String id;
+        public Location loc;
+    }
+
+    public void addCopy(Location loc,String id){
+        boolean isadd = false;
+        for (LocPlace pl:locArray){
+            if(pl.id.equals(id)){
+                pl.loc = loc;
+                isadd = true;
+                break;
+            }
+        }
+
+        if(!isadd){
+            LocPlace pl =new LocPlace();
+            pl.loc = loc;
+            pl.id = id;
+            locArray.add(pl);
+        }
+    }
+
+    public void sendNotification(){
+        Comparator comp = new Comparator<LocPlace>() {
+            @Override
+            public int compare(LocPlace o, LocPlace o2) {
+                float[] result1 = new float[3];
+                android.location.Location.distanceBetween(o.loc.getLatitude(), o.loc.getLongitude(), o2.loc.getLatitude(), o2.loc.getLatitude(), result1);
+                return (int)result1[0];
+            }
+        };
+
+        Collections.sort(locArray, comp);
+        ArrayList<String> outsideId = new ArrayList<>();
+
+        for (int i=1;i<locArray.size();i++){
+            float meeter = distFrom(locArray.get(0).loc.getLatitude(),locArray.get(0).loc.getLongitude(),locArray.get(i).loc.getLatitude(),locArray.get(i).loc.getLongitude());
+            if(meeter > 5000){
+                outsideId.add(locArray.get(i).id);
+            }
+        }
+
+        if(outsideId.size() > 0){
+            publishMessage(outsideId);
+        }
+    }
+
+    public static float distFrom(double lat1, double lng1, double lat2, double lng2) {
+        double earthRadius = 6371000; //meters
+        double dLat = Math.toRadians(lat2-lat1);
+        double dLng = Math.toRadians(lng2-lng1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        float dist = (float) (earthRadius * c);
+
+        return dist;
     }
 }

@@ -9,17 +9,27 @@
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content">
         <include
             android:id="@+id/toolbar"
             layout="@layout/toolbar" />
     </android.support.design.widget.AppBarLayout>
-    <FrameLayout
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ViewFlipper
+            android:id="@+id/flipper"
+            android:layout_width="match_parent"
+            android:layout_height="72dp">
+
+        </ViewFlipper>
+        <FrameLayout
             android:id="@+id/map_fragment"
-            android:layout_above="@+id/actions"
+            android:layout_below="@+id/flipper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+    </RelativeLayout>
+
 
     <LinearLayout
         android:id="@+id/actions"
@@ -53,5 +63,4 @@
             android:background="@color/colorPrimary"
             />
     </LinearLayout>
-
 </RelativeLayout>
