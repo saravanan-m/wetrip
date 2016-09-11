@@ -114,6 +114,7 @@ public class LocationSyncService extends Service {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("poke-msg");
+        filter.addAction("tag-msg");
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 filter);
     }

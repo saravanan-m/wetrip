@@ -7,9 +7,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.Ringtone;
@@ -222,6 +225,20 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         showGallery();
 
 
+        LayoutInflater mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = mInflater.inflate(R.layout.item_card, flipper, false);
+
+        TextView heading = (TextView)view.findViewById(R.id.heading);
+        TextView sub = (TextView)view.findViewById(R.id.sub_title);
+
+        heading.setText("Starting msg");
+        sub.setText("Hai");
+
+        if(flipper.getChildCount() > 10){
+            flipper.removeViewAt(0);
+        }
+
+        flipper.addView(view);
 
     }
 
@@ -268,7 +285,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LatLng loc = new LatLng(lat,
                             lng);
                     if (marker == null) {
-                        MarkerOptions options = new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromBitmap(textAsBitmap(id, 36, Color.GREEN)));
+                        MarkerOptions options = new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromBitmap(drawTextToBitmap(TripActivity.this,R.drawable.ic__img_user_pointer,id)));
                         marker = mMap.addMarker(options);
                         markerMap.put(id, marker);
                     } else {
@@ -454,7 +471,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
                 polyLineOptions.addAll(points);
-                polyLineOptions.width(5);
+                polyLineOptions.width(8);
                 polyLineOptions.color(Color.BLUE);
             }
 
@@ -566,6 +583,16 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         return routes;
     }
 
+
+    public Bitmap overlay(Bitmap bmp2) {
+        Bitmap bmp1 = BitmapFactory.decodeResource(getResources(), R.drawable.ic__img_user_pointer);
+        Bitmap bmOverlay = Bitmap.createBitmap(bmp1.getWidth(), bmp1.getHeight(), bmp1.getConfig());
+        Canvas canvas = new Canvas(bmOverlay);
+        canvas.drawBitmap(bmp1, new Matrix(), null);
+        canvas.drawBitmap(bmp2, 0, 0, null);
+        return bmOverlay;
+    }
+
     public Bitmap textAsBitmap(String text, float textSize, int textColor) {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextSize(textSize);
@@ -575,20 +602,16 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
        // int width = (int) (paint.measureText(text) + 0.5f); // round
        // int height = (int) (baseline + paint.descent() + 0.5f);
 
-        Rect bounds = new Rect();
-        paint.getTextBounds(text, 0, text.length(), bounds);
 
-        Bitmap image = Bitmap.createBitmap(bounds.width(), 48, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(image);
+        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.ic__img_user_pointer);
+        Canvas canvas = new Canvas(img);
 
         Paint circlePaint = new Paint();
         circlePaint.setColor(Color.RED);
         circlePaint.setAntiAlias(true);
-
-        canvas.drawCircle(bounds.width()/2, bounds.height()/2, bounds.width()/2, circlePaint);
         canvas.drawText(text, 0, baseline, paint);
 
-        return image;
+        return img;
     }
 
     @Override
@@ -725,5 +748,45 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(this);
 
+    }
+
+    public Bitmap drawTextToBitmap(Context gContext,
+                                   int gResId,
+                                   String gText) {
+        Resources resources = gContext.getResources();
+        float scale = resources.getDisplayMetrics().density;
+        Bitmap bitmap =
+                BitmapFactory.decodeResource(resources, gResId);
+
+        android.graphics.Bitmap.Config bitmapConfig =
+                bitmap.getConfig();
+        // set default bitmap config if none
+        if(bitmapConfig == null) {
+            bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+        }
+        // resource bitmaps are imutable,
+        // so we need to convert it to mutable one
+        bitmap = bitmap.copy(bitmapConfig, true);
+
+        Canvas canvas = new Canvas(bitmap);
+        // new antialised Paint
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // text color - #3D3D3D
+        paint.setColor(Color.RED);
+        paint.setStrokeWidth(6f);
+        // text size in pixels
+        paint.setTextSize((int) (14 * scale));
+        // text shadow
+        paint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+
+        // draw text to the Canvas center
+        Rect bounds = new Rect();
+        paint.getTextBounds(gText, 0, gText.length(), bounds);
+        int x = (bitmap.getWidth() - bounds.width())/2;
+        int y = (bitmap.getHeight() + bounds.height())/2;
+
+        canvas.drawText(gText, x, y, paint);
+
+        return bitmap;
     }
 }

@@ -1,6 +1,8 @@
 package com.wetrip.utils;
 
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -8,8 +10,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.wetrip.R;
+import com.wetrip.app.WeTripApplication;
 import com.wetrip.model.Place;
 
 import org.json.JSONObject;
@@ -62,5 +66,15 @@ public class PlacesDisplayOnMap extends AsyncTask<Object, Integer, List<Place>> 
 
             googleMap.addMarker(markerOptions);
         }
+
+
+        googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                Intent intent = new Intent("tag-msg");
+                intent.putExtra("msg", marker.getTitle());
+                LocalBroadcastManager.getInstance(WeTripApplication.getInstance()).sendBroadcast(intent);
+            }
+        });
     }
 }
