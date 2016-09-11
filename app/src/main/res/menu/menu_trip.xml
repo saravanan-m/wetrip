@@ -4,8 +4,7 @@
 
     <item
         android:id="@+id/action_name"
-        android:icon="@drawable/ic_action_help"
-        android:title="Finish"
+        android:title="End trip"
         app:showAsAction="always"
         android:orderInCategory="0"/>
 
