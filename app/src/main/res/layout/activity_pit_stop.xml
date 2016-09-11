@@ -17,11 +17,27 @@
     <include layout="@layout/contain_main" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/myLocationIcon"
+        android:id="@+id/pertol_pump"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_gas" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/hospital"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_my_location" />
+        android:src="@drawable/ic_hospital" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/cafe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|bottom"
+        android:layout_margin="@dimen/fab_margin"
+        android:src="@drawable/ic_hotel" />
 
 </android.support.design.widget.CoordinatorLayout>

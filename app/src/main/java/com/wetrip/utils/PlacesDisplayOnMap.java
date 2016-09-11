@@ -5,8 +5,11 @@ import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.wetrip.R;
 import com.wetrip.model.Place;
 
 import org.json.JSONObject;
@@ -16,6 +19,7 @@ public class PlacesDisplayOnMap extends AsyncTask<Object, Integer, List<Place>> 
 
     JSONObject placesJsonResponse;
     GoogleMap googleMap;
+    String type;
 
     @Override
     protected List<Place> doInBackground(Object... inputObj) {
@@ -25,6 +29,7 @@ public class PlacesDisplayOnMap extends AsyncTask<Object, Integer, List<Place>> 
 
         try {
             googleMap = (GoogleMap) inputObj[0];
+            type = (String)inputObj[2];
             placesJsonResponse = new JSONObject((String) inputObj[1]);
             googlePlacesList = placeJsonParser.parse(placesJsonResponse);
         } catch (Exception e) {
@@ -48,6 +53,13 @@ public class PlacesDisplayOnMap extends AsyncTask<Object, Integer, List<Place>> 
             LatLng latLng = place.latLng;
             markerOptions.position(latLng);
             markerOptions.title(placeName + " : " + vicinity);
+            if(type.equalsIgnoreCase("gas_station"))
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_gas));
+            else if(type.equalsIgnoreCase("cafe,restaurant"))
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe));
+            else if(type.equalsIgnoreCase("hospital"))
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_hospital));
+
             googleMap.addMarker(markerOptions);
         }
     }

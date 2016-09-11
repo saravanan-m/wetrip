@@ -62,12 +62,30 @@ public class PitStopActivity extends AppCompatActivity {
 //            }
 //        });
 
-        FloatingActionButton myLocationIcon = (FloatingActionButton) findViewById(R.id.myLocationIcon);
-        myLocationIcon.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton hospital = (FloatingActionButton) findViewById(R.id.hospital);
+        hospital.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(getApplicationContext(), "finding ", Toast.LENGTH_LONG).show();
-                searchGooglePlaces();
+                searchGooglePlaces("hospital");
+            }
+        });
+
+        FloatingActionButton cafe = (FloatingActionButton) findViewById(R.id.cafe);
+        cafe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "finding ", Toast.LENGTH_LONG).show();
+                searchGooglePlaces("cafe,restaurant");
+            }
+        });
+
+        FloatingActionButton gas = (FloatingActionButton) findViewById(R.id.pertol_pump);
+        gas.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "finding ", Toast.LENGTH_LONG).show();
+                searchGooglePlaces("gas_station");
             }
         });
 
@@ -102,8 +120,7 @@ public class PitStopActivity extends AppCompatActivity {
         });
     }
 
-    private void searchGooglePlaces(){
-        String type = "gas_station,restaurant,cafe,police";
+    private void searchGooglePlaces(String type){
         StringBuilder googlePlacesUrl = new StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?");
         googlePlacesUrl.append("location=" + latitude + "," + longitude);
         googlePlacesUrl.append("&radius=" + PROXIMITY_RADIUS);
@@ -112,9 +129,10 @@ public class PitStopActivity extends AppCompatActivity {
         googlePlacesUrl.append("&key=" + GOOGLE_API_KEY);
 
         PlacesFetcher placesRFetcher = new PlacesFetcher();
-        Object[] toPass = new Object[2];
+        Object[] toPass = new Object[3];
         toPass[0] = mMap;
         toPass[1] = googlePlacesUrl.toString();
+        toPass[2] = type;
         placesRFetcher.execute(toPass);
     }
 
