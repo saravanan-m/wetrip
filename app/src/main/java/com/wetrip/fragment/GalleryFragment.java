@@ -2,6 +2,7 @@ package com.wetrip.fragment;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,8 +25,14 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.davemorrissey.labs.subscaleview.ImageSource;
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView;
 import com.wetrip.R;
+import com.wetrip.utils.HttpFetcher;
+import com.wetrip.utils.PlacesDisplayOnMap;
 
 import junit.framework.Assert;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -47,10 +54,6 @@ public class GalleryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_galary,container,false);
         _images = new ArrayList<>();
-        _images.add("https://accounts.practo.com/static/images/practo_design.png");
-        _images.add("https://officechai.com/wp-content/uploads/2015/12/practo-logo.jpg");
-        _images.add("http://www.lemontreeexhibition.com/images/gallery_3.jpg");
-
          Assert.assertNotNull(_images);
         _pager = (ViewPager) view.findViewById(R.id.pager);
         _thumbnails = (LinearLayout) view.findViewById(R.id.thumbnails);
@@ -66,7 +69,6 @@ public class GalleryFragment extends Fragment {
 
             }
         });
-
         return view;
     }
 
@@ -147,5 +149,35 @@ public class GalleryFragment extends Fragment {
         public void destroyItem(ViewGroup container, int position, Object object) {
             container.removeView((LinearLayout) object);
         }
+
+       public  class TripImagesTask extends AsyncTask<Object, Integer, String> {
+
+            String googlePlacesData;
+            @Override
+            protected String doInBackground(Object... inputObj) {
+                try {
+                    String trip = "http://ec2-54-172-101-14.compute-1.amazonaws.com/api/trip/gettrip?trip=1";
+                    HttpFetcher http = new HttpFetcher();
+                    String googlePlacesData = http.read(trip);
+                } catch (Exception e) {
+                    Log.d("Google Place Read Task", e.toString());
+                }
+                return googlePlacesData;
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    JSONObject trip = jsonObject.getJSONObject("trip");
+                    JSONArray  jsonArray = trip.getJSONArray("files");
+                    Log.d("Files",jsonArray.length()+"");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
     }
 }
