@@ -177,10 +177,25 @@ public class LocationSyncService extends Service {
                         String ids = jsonObject.getString("alert_out");
                         if (ids.contains(SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"))){
 
-                            if(System.currentTimeMillis() - timeStamp > 10*60*1000){
+                            if((System.currentTimeMillis() - timeStamp) > 1*60*1000){
                                 timeStamp = System.currentTimeMillis();
 
-                                startActivity(new Intent(getApplicationContext(), AlertActivity.class));
+                                if(locArray.size()>1) {
+                                    float meeter = distFrom(locArray.get(0).loc.getLatitude(), locArray.get(0).loc.getLongitude(), locArray.get(1).loc.getLatitude(), locArray.get(1).loc.getLongitude());
+
+                                    String name = locArray.get(0).id;
+                                    if(name.equals(SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"))){
+                                        name = locArray.get(1).id;
+                                    }
+
+                                    String full = ""+(meeter/1000f);
+                                    String dist = full.substring(0,full.length()>5?5:full.length()) +"KM away" ;
+                                    Intent intent = new Intent("alert-bar");
+                                    intent.putExtra("id", name);
+                                    intent.putExtra("dist",dist);
+
+                                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                                }
                             }
                         }
                     }else {
@@ -302,7 +317,7 @@ public class LocationSyncService extends Service {
     public void addCopy(Location loc,String id){
         boolean isadd = false;
         for (LocPlace pl:locArray){
-            if(pl.equals(id)){
+            if(pl.id.equals(id)){
                 pl.loc = loc;
                 isadd = true;
                 break;
