@@ -102,7 +102,8 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
     private HashMap<String,Marker> markerMap = new HashMap<>();
     private Button btnPitStop;
     private Button btnPoke;
-
+    SupportMapFragment mapFragment;
+    GalleryFragment galleryFragment;
     private ViewFlipper flipper;
     float initialX;
     @Override
@@ -660,6 +661,8 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (file != null) {
                         // tell everybody you have succed upload image and post strings
                         Log.i("Messsage", "Upload Successfully.");
+                        String url = file.getJSONObject(0).getString("url");
+
 
                         Intent intent = new Intent("upload");
                         intent.putExtra("msg","upload");
@@ -746,23 +749,12 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void showGallery()
     {
-        GalleryFragment newFragment = new GalleryFragment();
-        SupportMapFragment mapFragment = new SupportMapFragment();
-        Bundle args = new Bundle();
-//        args.putInt(GalleryFragment.ARG_POSITION, position);
-//        newFragment.setArguments(args);
-
+         galleryFragment = new GalleryFragment();
+         mapFragment = new SupportMapFragment();
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-// Replace whatever is in the fragment_container view with this fragment,
-// and add the transaction to the back stack so the user can navigate back
-        transaction.add(R.id.image_fragment,newFragment);
+        transaction.add(R.id.image_fragment,galleryFragment);
         transaction.add(R.id.map_fragment,mapFragment);
-
-
-// Commit the transaction
         transaction.commit();
-
         mapFragment.getMapAsync(this);
 
     }

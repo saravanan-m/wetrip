@@ -164,6 +164,12 @@ public class GalleryFragment extends Fragment {
 
     }
 
+    public void updatePhoto(String url)
+    {
+        _images.add(url);
+        _adapter.notifyDataSetChanged();
+    }
+
     private void getTripPhoto() {
 
         StringRequest strReq = new StringRequest(Request.Method.GET,
@@ -212,6 +218,7 @@ public class GalleryFragment extends Fragment {
 
         };
         // Adding request to request queue
+        strReq.setShouldCache(false);
         WeTripApplication.getInstance().addToRequestQueue(strReq);
     }
 }
