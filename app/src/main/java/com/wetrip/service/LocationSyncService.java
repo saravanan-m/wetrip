@@ -115,6 +115,7 @@ public class LocationSyncService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction("poke-msg");
         filter.addAction("tag-msg");
+        filter.addAction("upload");
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 filter);
     }
@@ -214,7 +215,10 @@ public class LocationSyncService extends Service {
 
                         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
-                    } else{
+                    } else if(jsonObject.has("upload")){
+                        Intent intent = new Intent("restart");
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                    }else{
                         Intent intent = new Intent("lat-lng-event");
                         // You can also include some extra data.
                         intent.putExtra("lat", jsonObject.getDouble("lat"));
@@ -324,9 +328,12 @@ public class LocationSyncService extends Service {
     public void publishMessage(String msg){
         try {
             JSONObject jmain = new JSONObject();
-            jmain.put("poke_msg",msg.toString());
-            jmain.put("name",SharedPrefsUtils.getStringPreference(getApplicationContext(),"name"));
-
+            if(msg.equals("upload")) {
+                jmain.put("upload", "yes");
+            }else {
+                jmain.put("poke_msg", msg.toString());
+                jmain.put("name", SharedPrefsUtils.getStringPreference(getApplicationContext(), "name"));
+            }
             MqttMessage message = new MqttMessage(jmain.toString().getBytes());
             if(mqttclient !=null && mqttclient.isConnected() ) {
                 mqttclient.publish(subscriptionTopic, message);

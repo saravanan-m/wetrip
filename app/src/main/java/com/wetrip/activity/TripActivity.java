@@ -216,7 +216,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         filter.addAction("lat-lng-event");
         filter.addAction("capture-image");
         filter.addAction("alert-bar");
-
+        filter.addAction("restart");
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 filter);
 
@@ -275,7 +275,19 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onReceive(Context context, Intent intent) {
             // Get extra data included in the Intent
-            if(intent.getAction().equals("lat-lng-event")) {
+            if(intent.getAction().equals("restart")){
+
+                GalleryFragment newFragment = new GalleryFragment();
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+// Replace whatever is in the fragment_container view with this fragment,
+// and add the transaction to the back stack so the user can navigate back
+                transaction.replace(R.id.image_fragment,newFragment);
+
+// Commit the transaction
+                transaction.commit();
+
+            }
+            else if(intent.getAction().equals("lat-lng-event")) {
                 double lat = intent.getDoubleExtra("lat", -1);
                 double lng = intent.getDoubleExtra("lng", -1);
                 String id = intent.getStringExtra("id");
@@ -648,6 +660,11 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (file != null) {
                         // tell everybody you have succed upload image and post strings
                         Log.i("Messsage", "Upload Successfully.");
+
+                        Intent intent = new Intent("upload");
+                        intent.putExtra("msg","upload");
+                        LocalBroadcastManager.getInstance(WeTripApplication.getInstance()).sendBroadcast(intent);
+
                     } else {
                         Log.i("Unexpected", "Somthing Went Wrong.");
                     }
@@ -772,7 +789,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         // new antialised Paint
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         // text color - #3D3D3D
-        paint.setColor(Color.RED);
+        paint.setColor(Color.GREEN);
         paint.setStrokeWidth(6f);
         // text size in pixels
         paint.setTextSize((int) (14 * scale));
