@@ -739,7 +739,7 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 // Replace whatever is in the fragment_container view with this fragment,
 // and add the transaction to the back stack so the user can navigate back
-//        transaction.add(R.id.other_fragment,newFragment);
+        transaction.add(R.id.image_fragment,newFragment);
         transaction.add(R.id.map_fragment,mapFragment);
 
 
