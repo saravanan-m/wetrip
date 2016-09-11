@@ -91,7 +91,7 @@ public class ChatHeadService extends Service implements FloatingViewListener {
         mFloatingViewManager.addViewToWindow(iconView, options);
 
         // 常駐起動
-        startForeground(NOTIFICATION_ID, createNotification());
+//        startForeground(NOTIFICATION_ID, createNotification());
 
         return START_REDELIVER_INTENT;
     }

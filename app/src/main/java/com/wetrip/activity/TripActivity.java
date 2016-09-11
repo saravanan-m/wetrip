@@ -668,6 +668,12 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
                         intent.putExtra("msg","upload");
                         LocalBroadcastManager.getInstance(WeTripApplication.getInstance()).sendBroadcast(intent);
 
+                        Intent i2 = new Intent("upload");
+                        i2.putExtra("msg","added a new photo");
+                        LocalBroadcastManager.getInstance(WeTripApplication.getInstance()).sendBroadcast(i2);
+
+
+
                     } else {
                         Log.i("Unexpected", "Somthing Went Wrong.");
                     }
