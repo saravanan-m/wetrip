@@ -1,5 +1,7 @@
 package com.wetrip.activity;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,11 +11,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.provider.MediaStore;
+import android.provider.Settings;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -21,9 +25,19 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.error.AuthFailureError;
+import com.android.volley.error.NoConnectionError;
+import com.android.volley.error.TimeoutError;
+import com.android.volley.error.VolleyError;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -31,8 +45,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.wetrip.app.WeTripApplication;
+import com.wetrip.config.Config;
+import com.wetrip.fragment.GalleryFragment;
+import com.wetrip.service.ChatHeadService;
 import com.wetrip.service.LocationSyncService;
 import com.wetrip.R;
+import com.wetrip.utils.AppHelper;
+import com.wetrip.utils.SharedPrefsUtils;
+import com.wetrip.utils.VolleyMultipartRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,21 +68,28 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TripActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final LatLng START_POINT = new LatLng(12.971599,77.594563);
     private static final LatLng END_POINT = new LatLng(12.295810, 76.639381);
+    private static final int CHATHEAD_OVERLAY_PERMISSION_REQUEST_CODE = 100;
+    private static final int CUSTOM_OVERLAY_PERMISSION_REQUEST_CODE = 101;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
 
     private GoogleMap mMap;
 
     private Marker mMarkerStart;
     private Marker mMarkerEnd;
-
+    private static final int CAMERA_REQUEST = 1888;
     private HashMap<String,Marker> markerMap = new HashMap<>();
+    private Button btnPitStop;
+    private Button btnPoke;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_map);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -80,22 +108,41 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        btnPitStop = (Button) findViewById(R.id.btn_pit_stop);
+        btnPoke = (Button) findViewById(R.id.btn_poke);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        btnPitStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                startActivity(new Intent(getApplicationContext(), PitStopActivity.class));
             }
         });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         startService(new Intent(this,LocationSyncService.class));
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("lat-lng-event");
+        filter.addAction("capture-image");
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
-                new IntentFilter("lat-lng-event"));
+                filter);
+
+//        findViewById(R.id.action_name).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//            }
+//        });
+
+        showChatHead(getApplicationContext(),true);
+        showGallery();
+
     }
 
 
@@ -104,6 +151,27 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         stopService(new Intent(this,LocationSyncService.class));
+    }
+
+    @SuppressLint("NewApi")
+    private void showChatHead(Context context, boolean isShowOverlayPermission) {
+        // API22以下かチェック
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            context.startService(new Intent(context,ChatHeadService.class));
+            return;
+        }
+
+        // 他のアプリの上に表示できるかチェック
+        if (Settings.canDrawOverlays(context)) {
+            context.startService(new Intent(context, ChatHeadService.class));
+            return;
+        }
+
+        // オーバレイパーミッションの表示
+        if (isShowOverlayPermission) {
+            final Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
+            startActivityForResult(intent, CHATHEAD_OVERLAY_PERMISSION_REQUEST_CODE);
+        }
     }
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
@@ -125,6 +193,14 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
               }else{
                   marker.setPosition(loc);
               }
+            }
+            String msg = intent.getStringExtra("message");
+            if(msg != null && msg.equals("capture_image"))
+            {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
             }
 
         }
@@ -408,4 +484,132 @@ public class TripActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Log.d("Photo","Photo aa gaya?");
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            uploadImage(imageBitmap);
+        }
+    }
+
+
+
+    private void uploadImage(final Bitmap bitmap){
+        //Showing the progress dialog
+        final ProgressDialog loading = ProgressDialog.show(this,"Uploading...","Please wait...",false,false);
+
+        VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, Config.URL_UPLOAD_FILE, new Response.Listener<NetworkResponse>() {
+            @Override
+            public void onResponse(NetworkResponse response) {
+                String resultResponse = new String(response.data);
+                loading.hide();
+                try {
+                    JSONObject result = new JSONObject(resultResponse);
+                    JSONArray file = result.getJSONArray("file");
+                    if (file != null) {
+                        // tell everybody you have succed upload image and post strings
+                        Log.i("Messsage", "Upload Successfully.");
+                    } else {
+                        Log.i("Unexpected", "Somthing Went Wrong.");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                loading.hide();
+                NetworkResponse networkResponse = error.networkResponse;
+                String errorMessage = "Unknown error";
+                if (networkResponse == null) {
+                    if (error.getClass().equals(TimeoutError.class)) {
+                        errorMessage = "Request timeout";
+                    } else if (error.getClass().equals(NoConnectionError.class)) {
+                        errorMessage = "Failed to connect server";
+                    }
+                } else {
+                    String result = new String(networkResponse.data);
+                    try {
+                        JSONObject response = new JSONObject(result);
+                        String status = response.getString("status");
+                        String message = response.getString("message");
+
+                        Log.e("Error Status", status);
+                        Log.e("Error Message", message);
+
+                        if (networkResponse.statusCode == 404) {
+                            errorMessage = "Resource not found";
+                        } else if (networkResponse.statusCode == 401) {
+                            errorMessage = message+" Please login again";
+                        } else if (networkResponse.statusCode == 400) {
+                            errorMessage = message+ " Check your inputs";
+                        } else if (networkResponse.statusCode == 500) {
+                            errorMessage = message+" Something is getting wrong";
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Log.i("Error", errorMessage);
+                error.printStackTrace();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("trip","1");
+                return params;
+            }
+
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                // file name could found file base or direct access from real path
+                // for now just get bitmap data from ImageView
+                params.put("file", new DataPart("image.jpg", AppHelper.getByteArray(getBaseContext(), bitmap), "image/jpeg"));
+
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("X-AUTH-TOKEN",SharedPrefsUtils.getStringPreference(getApplicationContext(),"token"));
+                return params;
+            }
+        };
+
+        //Creating a Request Queue
+        RequestQueue requestQueue = WeTripApplication.getInstance().getRequestQueue();
+
+        //Adding request to the queue
+        requestQueue.add(multipartRequest);
+    }
+
+
+    public void showGallery()
+    {
+        GalleryFragment newFragment = new GalleryFragment();
+        SupportMapFragment mapFragment = new SupportMapFragment();
+        Bundle args = new Bundle();
+//        args.putInt(GalleryFragment.ARG_POSITION, position);
+//        newFragment.setArguments(args);
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+// Replace whatever is in the fragment_container view with this fragment,
+// and add the transaction to the back stack so the user can navigate back
+//        transaction.add(R.id.other_fragment,newFragment);
+        transaction.add(R.id.map_fragment,mapFragment);
+
+
+// Commit the transaction
+        transaction.commit();
+
+        mapFragment.getMapAsync(this);
+
+    }
 }

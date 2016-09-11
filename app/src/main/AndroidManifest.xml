@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.wetrip">
-
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -11,11 +11,12 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <application
         android:name=".app.WeTripApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/wetrip"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/WeTripTheme"
@@ -45,6 +46,11 @@
         <activity
             android:name=".activity.TripActivity"
             android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity
+            android:name=".activity.PitStopActivity"
+            android:label="Pick Pit stop"
             android:windowSoftInputMode="adjustResize">
 
         </activity>
@@ -70,6 +76,15 @@
             android:exported="true"></service>
 
         <service android:name="org.eclipse.paho.android.service.MqttService"/>
+
+        <service
+            android:name=".service.ChatHeadService"
+            android:exported="false"/>
+        <!-- カスタムデモ表示サービス -->
+        <service
+            android:name=".service.CustomFloatingViewService"
+            android:exported="false"/>
+
 
     </application>
 

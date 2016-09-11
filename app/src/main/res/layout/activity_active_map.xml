@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context="com.wetrip.activity.TripActivity">
-
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -15,17 +14,44 @@
         <include
             android:id="@+id/toolbar"
             layout="@layout/toolbar" />
-
     </android.support.design.widget.AppBarLayout>
+    <FrameLayout
+            android:id="@+id/map_fragment"
+            android:layout_above="@+id/actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-    <include layout="@layout/content_active_map" />
+    <LinearLayout
+        android:id="@+id/actions"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Poke"
+            android:drawableLeft="@drawable/ic_poke"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:id="@+id/btn_poke"
+            android:layout_marginRight="1dp"
+            android:textColor="@color/colorWhite"
+            android:background="@color/colorPrimary"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pit Stop"
+            android:paddingLeft="20dp"
+            android:layout_gravity="left"
+            android:id="@+id/btn_pit_stop"
+            android:drawableLeft="@drawable/ic_pit_stop"
+            android:textSize="16sp"
+            android:textColor="@color/colorWhite"
+            android:layout_weight="1"
+            android:background="@color/colorPrimary"
+            />
+    </LinearLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
-
-</android.support.design.widget.CoordinatorLayout>
+</RelativeLayout>
